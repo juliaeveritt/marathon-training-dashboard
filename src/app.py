@@ -17,36 +17,61 @@ alt.themes.enable("dark")
 # Sidebar
 with st.sidebar:
     st.title('🏃 Julia\'s Run Tracker')
-    filter_value = st.slider('Select Training Week', min_value=1, max_value=20, value=10)
+    filter_value = st.slider('Select Training Week', min_value=1, max_value=18, value=10)
 
-# Overall summary chart
+# Weekly long run & total distance plots
 aggregate_dictionary = {'distance':['sum','max'],'moving_time':'sum',
                        'total_elevation_gain':'sum', 'average_speed':'mean',
                        'average_heartrate': 'mean', 'kudos_count':'sum'}
 weekly_dash = runs.groupby(['week'], as_index=False).aggregate(aggregate_dictionary)
 weekly_dash.columns = ['week','Total Distance', 'Longest Run','moving_time','total_elevation_gain','average_speed',
                        'average_heartrate', 'kudos_count']
-weekly_dash = pd.melt(weekly_dash, 
-                      id_vars=['week', 'moving_time','total_elevation_gain','average_speed',
-                       'average_heartrate', 'kudos_count'],
-                       value_vars=['Longest Run', 'Total Distance'],
-                       var_name='Metric')
 weekly_dash = weekly_dash[weekly_dash['week'] < 18]
 
-click = alt.selection_single()
-weekly_summary_view = alt.Chart(weekly_dash).mark_line(point=True, size=2).encode(
-    alt.X('week:Q', title='Week #',axis=alt.Axis(tickCount=18)),
-    alt.Y('value:Q', title='Distance [km]'),
-    color=alt.condition(click, 'Metric',alt.value('lightgray')),
-    tooltip = ['week', 'value']
+weekly_longest_select = alt.selection_single()
+weekly_longest = alt.Chart(weekly_dash).mark_line(point=True, size=2).encode(
+    alt.X('week:Q', title='Week #'),
+    alt.Y('Longest Run:Q', title='Longest Run [km]'),
+    color=alt.condition(weekly_longest_select, alt.value('orange'),alt.value('lightgray')),
+    tooltip = ['week', 'Longest Run']
 ).add_selection(
-    click
+    weekly_longest_select
 ).configure_axis(
     grid=False
 )
 
-st.subheader("Weekly Distance Summary")
-st.altair_chart(weekly_summary_view, use_container_width=True)
+weekly_total_select = alt.selection_single()
+weekly_total = alt.Chart(weekly_dash).mark_line(point=True, size=2).encode(
+    alt.X('week:Q', title='Week #'),
+    alt.Y('Total Distance:Q', title='Total Distance [km]'),
+    color=alt.condition(weekly_total_select, alt.value('orange'),alt.value('lightgray')),
+    tooltip = ['week', 'Total Distance']
+).add_selection(
+    weekly_total_select
+).configure_axis(
+    grid=False
+)
+
+
+st.subheader("Marathon training performance tracker")
+st.markdown("An overview of my running stats during an 18-week training program for the Vancouver BMO marathon.")
+# Display plots side by side with space between them
+col1, col2, col3 = st.columns([5, 1, 5])
+
+with col1:
+    st.subheader("Total Distance per Week")
+    st.altair_chart(weekly_total, use_container_width=True)
+
+with col2:
+    # Add horizontal space
+    st.empty()
+
+with col3:
+    st.subheader("Sunday Long Run per Week")
+    st.altair_chart(weekly_longest, use_container_width=True)
+
+#st.altair_chart(weekly_longest, use_container_width=True)
+#st.altair_chart(weekly_total, use_container_width=True)
 
 # Filtered data
 cols = ['name', 'start_date', 'distance', 'moving_time', 'total_elevation_gain', 'kudos_count', 'average_speed', 'average_heartrate']
@@ -55,12 +80,13 @@ filtered_data.columns = ['Name', 'Date', 'Distance [km]', 'Moving Time [mins]', 
 
 # Display filtered data
 st.subheader(f"Runs for training week #{filter_value}")
+st.markdown("Select a week using the toggle to view a breakdown of your runs.")
 st.table(filtered_data.style.format({"Distance [km]": "{:.2f}", "Moving Time [mins]": "{:.2f}", "Elevation [m]": "{:.1f}", "Pace [min/km]": "{:.2f}", "Heartrate": "{:.0f}"}))
 
 # Metrics
 st.subheader("Weekly Metrics")
 average_total_time = round(weekly_dash['moving_time'].mean(), 2)
-average_total_dist = round(weekly_dash[weekly_dash['Metric']=='Total Distance']['value'].mean(), 2)
+average_total_dist = round(weekly_dash['Total Distance'].mean(), 2)
 average_total_elevation = round(weekly_dash['total_elevation_gain'].mean(), 2)
 average_total_speed = round(weekly_dash['average_speed'].mean(), 2)
 
