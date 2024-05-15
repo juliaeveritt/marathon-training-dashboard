@@ -7,8 +7,7 @@ runs = pd.read_csv('data/processed/processed.csv')
 
 # Set page configuration
 st.set_page_config(
-    page_title="Julia's Run Tracker",
-    page_icon="🏃",
+    page_title="Run Tracker",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -16,7 +15,7 @@ alt.themes.enable("dark")
 
 # Sidebar
 with st.sidebar:
-    st.title('🏃 Julia\'s Run Tracker')
+    st.title('🏃Run Tracker')
     filter_value = st.slider('Select Training Week', min_value=1, max_value=18, value=10)
 
 # Weekly long run & total distance plots
@@ -54,12 +53,12 @@ weekly_total = alt.Chart(weekly_dash).mark_line(point=True, size=2).encode(
 
 
 st.subheader("Marathon training performance tracker")
-st.markdown("An overview of my running stats during an 18-week training program for the Vancouver BMO marathon.")
+st.markdown("Visualizing my progress during an 18-week training program for the Vancouver BMO marathon.")
 # Display plots side by side with space between them
 col1, col2, col3 = st.columns([5, 1, 5])
 
 with col1:
-    st.subheader("Total Distance per Week")
+    st.subheader("Total Distance")
     st.altair_chart(weekly_total, use_container_width=True)
 
 with col2:
@@ -67,11 +66,9 @@ with col2:
     st.empty()
 
 with col3:
-    st.subheader("Sunday Long Run per Week")
+    st.subheader("Longest Run")
     st.altair_chart(weekly_longest, use_container_width=True)
 
-#st.altair_chart(weekly_longest, use_container_width=True)
-#st.altair_chart(weekly_total, use_container_width=True)
 
 # Filtered data
 cols = ['name', 'start_date', 'distance', 'moving_time', 'total_elevation_gain', 'kudos_count', 'average_speed', 'average_heartrate']
